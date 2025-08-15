@@ -34,6 +34,8 @@
         • Health checks y observabilidad con Spring Actuator
 	</description>
 
+	<url>https://github.com/AntRed1/JCE-CONSULTA</url>
+
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -47,6 +49,7 @@
 			<name>A. Rojas</name>
 			<email>contacto@arojas.dev</email>
 			<organization>ARojas Development</organization>
+			<organizationUrl>https://github.com/AntRed1</organizationUrl>
 			<roles>
 				<role>Lead Developer</role>
 				<role>Software Architect</role>
@@ -54,6 +57,17 @@
 			<timezone>America/Santo_Domingo</timezone>
 		</developer>
 	</developers>
+
+	<scm>
+		<connection>scm:git:git://github.com/AntRed1/JCE-CONSULTA.git</connection>
+		<developerConnection>scm:git:ssh://github.com:AntRed1/JCE-CONSULTA.git</developerConnection>
+		<url>https://github.com/AntRed1/JCE-CONSULTA/tree/main</url>
+	</scm>
+
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/AntRed1/JCE-CONSULTA/issues</url>
+	</issueManagement>
 
 	<properties>
 		<!-- Java & Spring Boot Versions -->
