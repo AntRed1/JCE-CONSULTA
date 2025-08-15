@@ -1,0 +1,12 @@
+{"properties": [
+  {
+    "name": "jce.portal.base-url",
+    "type": "java.lang.String",
+    "description": "A description for 'jce.portal.base-url'"
+  },
+  {
+    "name": "jce.portal.endpoint",
+    "type": "java.lang.String",
+    "description": "A description for 'jce.portal.endpoint'"
+  }
+]}

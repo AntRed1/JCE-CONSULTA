@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <!-- ===================================== -->
+  <!-- PROPIEDADES Y VARIABLES -->
+  <!-- ===================================== -->
+
+  <springProfile name="!prod">
+    <property name="LOG_LEVEL_ROOT" value="INFO"/>
+    <property name="LOG_LEVEL_APP" value="DEBUG"/>
+  </springProfile>
+
+  <springProfile name="prod">
+    <property name="LOG_LEVEL_ROOT" value="WARN"/>
+    <property name="LOG_LEVEL_APP" value="INFO"/>
+  </springProfile>
+
+  <!-- Directorio de logs -->
+  <property name="LOG_DIR" value="${LOG_DIR:-./logs}"/>
+
+  <!-- Nombre de la aplicación -->
+  <property name="APP_NAME" value="jce-consulta-ms"/>
+
+  <!-- Patrón de formato para consola (desarrollo) -->
+  <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+
+  <!-- Patrón de formato para archivo (producción) -->
+  <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{requestId:-}] %logger{36} - %msg%n"/>
+
+  <!-- Patrón de formato JSON para integración con sistemas de logging -->
+  <property name="JSON_LOG_PATTERN" value='{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}","level":"%level","thread":"%thread","logger":"%logger{36}","requestId":"%X{requestId:-}","message":"%message","exception":"%ex"}%n'/>
+
+  <!-- ===================================== -->
+  <!-- APPENDERS - CONSOLA -->
+  <!-- ===================================== -->
+
+  <!-- Appender para consola (desarrollo y pruebas) -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>DEBUG</level>
+    </filter>
+  </appender>
+
+  <!-- ===================================== -->
+  <!-- APPENDERS - ARCHIVOS -->
+  <!-- ===================================== -->
+
+  <!-- Appender para archivo general -->
+  <appender name="FILE_ALL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/${APP_NAME}.log</file>
+    <encoder>
+      <pattern>${FILE_LOG_PATTERN}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_DIR}/${APP_NAME}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>100MB</maxFileSize>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>3GB</totalSizeCap>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>DEBUG</level>
+    </filter>
+  </appender>
+
+  <!-- Appender para errores críticos -->
+  <appender name="FILE_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/${APP_NAME}-error.log</file>
+    <encoder>
+      <pattern>${FILE_LOG_PATTERN}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_DIR}/${APP_NAME}-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>50MB</maxFileSize>
+      <maxHistory>90</maxHistory>
+      <totalSizeCap>1GB</totalSizeCap>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>ERROR</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+  </appender>
+
+  <!-- Appender para auditoría de consultas -->
+  <appender name="FILE_AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/${APP_NAME}-audit.log</file>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{requestId:-}] [%X{clientIp:-}] [%X{cedula:-}] - %msg%n</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_DIR}/${APP_NAME}-audit.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>200MB</maxFileSize>
+      <maxHistory>365</maxHistory>
+      <totalSizeCap>10GB</totalSizeCap>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+  </appender>
+
+  <!-- Appender para métricas y performance -->
+  <appender name="FILE_METRICS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/${APP_NAME}-metrics.log</file>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{requestId:-}] - %msg%n</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_DIR}/${APP_NAME}-metrics.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>100MB</maxFileSize>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>2GB</totalSizeCap>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+  </appender>
+
+  <!-- ===================================== -->
+  <!-- APPENDERS - JSON (PARA INTEGRACIÓN) -->
+  <!-- ===================================== -->
+
+  <!-- Appender JSON para sistemas de logging centralizados (ELK, Splunk, etc.) -->
+  <springProfile name="prod">
+    <appender name="FILE_JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>${LOG_DIR}/${APP_NAME}-json.log</file>
+      <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+        <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+          <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+            <prettyPrint>false</prettyPrint>
+          </jsonFormatter>
+          <appendLineSeparator>true</appendLineSeparator>
+          <includeContextName>true</includeContextName>
+          <includeMdc>true</includeMdc>
+        </layout>
+      </encoder>
+
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+        <fileNamePattern>${LOG_DIR}/${APP_NAME}-json.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+        <maxFileSize>200MB</maxFileSize>
+        <maxHistory>30</maxHistory>
+        <totalSizeCap>5GB</totalSizeCap>
+      </rollingPolicy>
+    </appender>
+  </springProfile>
+
+  <!-- ===================================== -->
+  <!-- APPENDERS - ASYNC (PARA PERFORMANCE) -->
+  <!-- ===================================== -->
+
+  <!-- Wrapper asíncrono para mejor performance -->
+  <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="FILE_ALL"/>
+    <queueSize>1024</queueSize>
+    <discardingThreshold>0</discardingThreshold>
+    <includeCallerData>false</includeCallerData>
+  </appender>
+
+  <appender name="ASYNC_ERROR" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="FILE_ERROR"/>
+    <queueSize>256</queueSize>
+    <discardingThreshold>0</discardingThreshold>
+    <includeCallerData>true</includeCallerData>
+  </appender>
+
+  <!-- ===================================== -->
+  <!-- LOGGERS ESPECÍFICOS -->
+  <!-- ===================================== -->
+
+  <!-- Logger principal de la aplicación -->
+  <logger name="com.arojas.jce_consulta" level="${LOG_LEVEL_APP}" additivity="false">
+    <springProfile name="!prod">
+      <appender-ref ref="CONSOLE"/>
+    </springProfile>
+    <appender-ref ref="ASYNC_FILE"/>
+    <appender-ref ref="ASYNC_ERROR"/>
+  </logger>
+
+  <!-- Logger específico para auditoría de consultas -->
+  <logger name="com.arojas.jce_consulta.audit" level="INFO" additivity="false">
+    <appender-ref ref="FILE_AUDIT"/>
+  </logger>
+
+  <!-- Logger específico para métricas -->
+  <logger name="com.arojas.jce_consulta.metrics" level="INFO" additivity="false">
+    <appender-ref ref="FILE_METRICS"/>
+  </logger>
+
+  <!-- Logger para el cliente HTTP JCE -->
+  <logger name="com.arojas.jce_consulta.client" level="DEBUG" additivity="false">
+    <springProfile name="!prod">
+      <appender-ref ref="CONSOLE"/>
+    </springProfile>
+    <appender-ref ref="ASYNC_FILE"/>
+  </logger>
+
+  <!-- Logger para el servicio principal -->
+  <logger name="com.arojas.jce_consulta.service" level="INFO" additivity="false">
+    <springProfile name="!prod">
+      <appender-ref ref="CONSOLE"/>
+    </springProfile>
+    <appender-ref ref="ASYNC_FILE"/>
+    <appender-ref ref="FILE_AUDIT"/>
+  </logger>
+
+  <!-- Logger para el controlador -->
+  <logger name="com.arojas.jce_consulta.controller" level="INFO" additivity="false">
+    <springProfile name="!prod">
+      <appender-ref ref="CONSOLE"/>
+    </springProfile>
+    <appender-ref ref="ASYNC_FILE"/>
+    <appender-ref ref="FILE_AUDIT"/>
+  </logger>
+
+  <!-- Logger para manejo de excepciones -->
+  <logger name="com.arojas.jce_consulta.exception" level="WARN" additivity="false">
+    <springProfile name="!prod">
+      <appender-ref ref="CONSOLE"/>
+    </springProfile>
+    <appender-ref ref="ASYNC_FILE"/>
+    <appender-ref ref="ASYNC_ERROR"/>
+  </logger>
+
+  <!-- ===================================== -->
+  <!-- LOGGERS DE FRAMEWORKS EXTERNOS -->
+  <!-- ===================================== -->
+
+  <!-- Spring Framework -->
+  <logger name="org.springframework" level="INFO"/>
+  <logger name="org.springframework.web" level="WARN"/>
+  <logger name="org.springframework.security" level="WARN"/>
+  <logger name="org.springframework.cache" level="WARN"/>
+
+  <!-- Spring Boot -->
+  <logger name="org.springframework.boot" level="INFO"/>
+  <logger name="org.springframework.boot.actuate" level="WARN"/>
+
+  <!-- WebFlux y Reactor -->
+  <logger name="reactor.netty" level="WARN"/>
+  <logger name="org.springframework.web.reactive" level="WARN"/>
+
+  <!-- HTTP Client -->
+  <logger name="org.apache.http" level="WARN"/>
+  <logger name="org.springframework.web.client" level="WARN"/>
+
+  <!-- Redis y Caché -->
+  <logger name="org.springframework.data.redis" level="WARN"/>
+  <logger name="io.lettuce" level="WARN"/>
+
+  <!-- Metrics y Monitoring -->
+  <logger name="io.micrometer" level="WARN"/>
+  <logger name="io.micrometer.core.instrument" level="INFO"/>
+
+  <!-- Jackson JSON -->
+  <logger name="com.fasterxml.jackson" level="WARN"/>
+
+  <!-- Swagger/OpenAPI -->
+  <logger name="org.springdoc" level="WARN"/>
+  <logger name="io.swagger" level="WARN"/>
+
+  <!-- Validation -->
+  <logger name="org.hibernate.validator" level="WARN"/>
+
+  <!-- Rate Limiting -->
+  <logger name="io.github.bucket4j" level="WARN"/>
+
+  <!-- XML Processing -->
+  <logger name="javax.xml" level="WARN"/>
+  <logger name="org.xml" level="WARN"/>
+
+  <!-- Logback interno -->
+  <logger name="ch.qos.logback" level="WARN"/>
+
+  <!-- ===================================== -->
+  <!-- LOGGER ROOT -->
+  <!-- ===================================== -->
+
+  <root level="${LOG_LEVEL_ROOT}">
+    <springProfile name="!prod">
+      <appender-ref ref="CONSOLE"/>
+    </springProfile>
+    <appender-ref ref="ASYNC_FILE"/>
+    <appender-ref ref="ASYNC_ERROR"/>
+
+    <springProfile name="prod">
+      <appender-ref ref="FILE_JSON"/>
+    </springProfile>
+  </root>
+
+  <!-- ===================================== -->
+  <!-- CONFIGURACIÓN DE MDC -->
+  <!-- ===================================== -->
+
+  <!-- 
+    Para usar MDC en el código:
+    
+    MDC.put("requestId", "unique-request-id");
+    MDC.put("clientIp", "192.168.1.100");
+    MDC.put("cedula", "001-1234567-1");
+    logger.info("Consulta procesada exitosamente");
+    MDC.clear();
+    -->
+
+  <!-- ===================================== -->
+  <!-- CONFIGURACIÓN ADICIONAL -->
+  <!-- ===================================== -->
+
+  <!-- Detectar cambios en configuración automáticamente cada 30 segundos -->
+  <scan>true</scan>
+  <scanPeriod>30 seconds</scanPeriod>
+
+  <!-- Buffer para mejorar performance de escritura -->
+  <property name="IMMEDIATE_FLUSH" value="false"/>
+
+  <!-- Configuración de shutdown hook -->
+  <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+
+  <!-- Status listener para debugging de logback (solo desarrollo) -->
+  <springProfile name="dev">
+    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>
+  </springProfile>
+
+</configuration>
